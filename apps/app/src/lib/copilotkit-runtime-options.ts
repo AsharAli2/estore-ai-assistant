@@ -26,7 +26,11 @@ export function buildRuntimeOptions(env: RuntimeOptionsEnv) {
     agents: {
       default: new CredentialSafeLangGraphAgent({
         url: normalizeLanggraphUrl(env.langgraphUrl),
-        ...(env.providerHeaders && { headers: env.providerHeaders }),
+        // Estore: shared token so only this app can call the deployed agent
+        headers: {
+          ...(env.providerHeaders ?? {}),
+          ...(process.env.AGENT_ACCESS_TOKEN && { "x-agent-token": process.env.AGENT_ACCESS_TOKEN }),
+        },
       }),
     },
     a2ui: { injectA2UITool: false }, // Estore: compare products in plain text, no A2UI tables

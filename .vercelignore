@@ -1,0 +1,7 @@
+apps/agent
+apps/mcp
+docs
+.chalk
+**/.venv
+**/node_modules
+**/.next

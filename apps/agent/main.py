@@ -3,6 +3,7 @@ This is the main entry point for the agent.
 It defines the workflow graph, state, tools, nodes and edges.
 """
 
+import hmac
 import os
 import warnings
 
@@ -51,6 +52,24 @@ agent = create_deep_agent(
 
 app = FastAPI()
 app.add_middleware(CredentialsMiddleware)
+
+
+class AgentTokenMiddleware:
+    """Estore: require x-agent-token (when AGENT_ACCESS_TOKEN is set) so only the chat app can call the agent."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        token = os.environ.get("AGENT_ACCESS_TOKEN", "").strip()
+        if token and scope["type"] == "http" and scope["path"] != "/health":
+            supplied = dict(scope.get("headers", [])).get(b"x-agent-token", b"").decode("latin-1")
+            if not hmac.compare_digest(supplied, token):
+                return await JSONResponse({"ok": False, "code": "unauthorized"}, status_code=401)(scope, receive, send)
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(AgentTokenMiddleware)  # added last = runs first
 
 
 @app.post("/credentials/validate")

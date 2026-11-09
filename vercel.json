@@ -1,0 +1,18 @@
+{
+  "services": {
+    "open-generative-ui-agent": {
+      "root": "apps/agent",
+      "entrypoint": "main:app",
+      "buildCommand": "pip install uv && uv sync"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "open-generative-ui-agent"
+      }
+    }
+  ]
+}
